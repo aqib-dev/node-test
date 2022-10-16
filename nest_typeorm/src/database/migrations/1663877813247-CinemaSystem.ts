@@ -216,10 +216,13 @@ export class CinemaSystem1663877813247 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('movie')
-    await queryRunner.dropTable('movie')
-    await queryRunner.dropTable('seat')
-    await queryRunner.dropTable('ticket_price')
-    await queryRunner.dropTable('')
+    // TODO drop foreign keys first
+    await queryRunner.dropTable('movie');
+    await queryRunner.dropTable('cinema_room');
+    await queryRunner.dropTable('show');
+    await queryRunner.dropTable('seat');
+    await queryRunner.dropTable('seat_price');
+    await queryRunner.dropTable('user');
+    await queryRunner.dropTable('booking');
   }
 }

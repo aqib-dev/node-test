@@ -12,8 +12,8 @@ export class Workshop {
   @Column({ type: 'datetime' })
   end: string;
 
-  @Column({ type: 'integer', default: null })
-  eventId: number;
+  @ManyToOne(() => Event, (event) => event.workshops)
+  event: Workshop;
 
   @Column()
   name: string;

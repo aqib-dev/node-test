@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { In, LessThan, Not, Repository } from 'typeorm';
 import { Get, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
@@ -93,7 +93,21 @@ export class EventsService {
 
   @Get('events')
   async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
+    try {
+      const events = await this.eventRepository.find({
+        relations: {
+          workshops: true,
+        },
+        order: {
+          workshops: {
+            id: 'ASC',
+          },
+        },
+      });
+      return events;
+    } catch (error) {
+      console.error('Error :: EventsService.getEventsWithWorkshops', error);
+    }
   }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
@@ -164,6 +178,40 @@ export class EventsService {
      */
   @Get('futureevents')
   async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
+    try {
+      const currentDate = new Date().toISOString();
+
+      /** get all past-events from database based on workshop start date */
+      const pastEvents = await this.eventRepository.find({
+        where: {
+          workshops: {
+            start: LessThan(currentDate),
+          },
+        },
+        select: ['id'],
+      });
+      const pastEventIds = pastEvents?.map((event) => event?.id);
+
+      /** get all future-events from database */
+      const futureEvents = await this.eventRepository.find({
+        where: {
+          id: Not(In(pastEventIds)),
+        },
+        relations: {
+          workshops: true,
+        },
+        order: {
+          workshops: {
+            id: 'ASC',
+          },
+        },
+      });
+      return futureEvents;
+    } catch (error) {
+      console.error(
+        'Error :: EventsService.getFutureEventWithWorkshops',
+        error,
+      );
+    }
   }
 }

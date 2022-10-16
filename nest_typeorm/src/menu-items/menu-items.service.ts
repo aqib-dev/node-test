@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MenuItem } from './entities/menu-item.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { treeTransformer } from '../common/utils';
 
 @Injectable()
 export class MenuItemsService {
@@ -86,6 +87,28 @@ export class MenuItemsService {
     ]
   */
   async getMenuItems() {
-    throw new Error('TODO in task 3');
+    /** using recursive CTE to fetch the menus along with all nested sub-menus */
+    try {
+      const response = await this.menuItemRepository.query(`
+        with RECURSIVE MenuCTE (menuId, name, parentId, url, createdAt)
+            as
+            (
+                Select id, name, parentId, url, createdAt
+                from menu_item
+                where parentId is null
+                
+                union all
+                
+                Select menu_item.id as id, menu_item.name as name, menu_item.parentId, menu_item.url, menu_item.createdAt
+                from menu_item
+                join MenuCTE
+                on menu_item.parentId = MenuCTE.menuId
+            )
+        select * from MenuCTE menu;
+    `);
+      return treeTransformer(response);
+    } catch (error) {
+      console.error('Error :: MenuItemsService.getMenuItems', error);
+    }
   }
 }
